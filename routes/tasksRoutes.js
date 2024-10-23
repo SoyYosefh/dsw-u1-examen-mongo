@@ -31,62 +31,138 @@ const authMiddleware = require('../middlewares/authMiddleware');
  *           format: date
  *           description: Fecha de finalización de la tarea
  *         estatus:
- *           type: String
+ *           type: string
  *           description: Estatus de la tarea
- *     TaskResponse:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *           description: ID único de la tarea
- *         title:
- *           type: string
- *           description: Título de la tarea
- *         description:
- *           type: string
- *           description: Descripción de la tarea
- *         startDate:
- *           type: string
- *           description: Fecha de inicio
- *         endDate:
- *           type: string
- *           description: Fecha de fin
- *         estatus:
- *           type: string
- *           description: Estatus
- *     ApiKeyRequest:
- *       type: object
- *       required:
- *         - apikey
- *       properties:
- *         apikey:
- *           type: string
- *           description: La clave API del usuario
  */
 
 /**
  * @swagger
  * /tasks:
  *   post:
- *     summary: Crear una nueva tarea
+ *     summary: Crear un nuevo proyecto
  *     tags: [Tareas]
- *     security:
- *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Task'
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: El título del proyecto
+ *               description:
+ *                 type: string
+ *                 description: Una descripción detallada del proyecto
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de inicio del proyecto en formato ISO
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de fin del proyecto en formato ISO
+ *               estatus:
+ *                 type: string
+ *                 description: Estado del proyecto (por ejemplo, "Terminada" o "No terminada")
+ *               apikey:
+ *                 type: string
+ *                 description: La API key del usuario para autorización
+ *             example:
+ *               title: "Proyecto1"
+ *               description: "Descripción detallada del nuevo proyecto."
+ *               startDate: "2024-10-22" 
+ *               endDate: "2024-12-31"
+ *               estatus: "No terminada" 
+ *               apikey: "WW9zZWZoOllvc2VmaA=="
+ *     responses:
+ *       201:
+ *         description: Proyecto creado exitosamente
+ *       400:
+ *         description: Error en la solicitud, datos inválidos
+ *       401:
+ *         description: No autorizado, API key inválida
+ */
+/**
+ * @swagger
+ * /tasks:
+ *   post:
+ *     summary: Crear una nueva tarea
+ *     tags: [Tareas]
+ *     description: Crea una nueva tarea con los detalles proporcionados.
+ *     security:
+ *       - apiKey: [] 
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - startDate
+ *               - endDate
+ *               - estatus
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: El título de la tarea
+ *               description:
+ *                 type: string
+ *                 description: La descripción de la tarea
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de inicio de la tarea
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Fecha de finalización de la tarea
+ *               estatus:
+ *                 type: string
+ *                 description: Estatus de la tarea
+ *           example:
+ *             title: "Tarea de ejemplo"
+ *             description: "Descripción de la tarea de ejemplo."
+ *             startDate: "2024-10-25"
+ *             endDate: "2024-10-30"
+ *             estatus: "pendiente"
+ *             apikey: "WW9zZWZoOllvc2VmaA=="
  *     responses:
  *       201:
  *         description: Tarea creada exitosamente
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/TaskResponse'
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: ID único de la tarea creada
+ *                 title:
+ *                   type: string
+ *                   description: El título de la tarea
+ *                 description:
+ *                   type: string
+ *                   description: La descripción de la tarea
+ *                 startDate:
+ *                   type: string
+ *                   format: date
+ *                   description: Fecha de inicio de la tarea
+ *                 endDate:
+ *                   type: string
+ *                   format: date
+ *                   description: Fecha de finalización de la tarea
+ *                 estatus:
+ *                   type: string
+ *                   description: Estatus de la tarea
+ *       400:
+ *         description: Error en la solicitud, datos inválidos
  *       401:
- *         description: No autorizado
+ *         description: No autorizado, API key inválida
+ *       500:
+ *         description: Error interno del servidor
  */
 router.post('/', authMiddleware, tasksController.crearTask);
 
@@ -101,18 +177,18 @@ router.post('/', authMiddleware, tasksController.crearTask);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ApiKeyRequest'
+ *             type: object
+ *             properties:
+ *               apikey:
+ *                 type: string
+ *                 description: La API key del usuario para autorización
+ *             example:
+ *               apikey: "WW9zZWZoOllvc2VmaA=="
  *     responses:
  *       200:
- *         description: Lista de tareas obtenida exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TaskResponse'
+ *         description: Lista de todas las tareas
  *       401:
- *         description: No autorizado
+ *         description: No autorizado, API key inválida
  */
 router.post('/all', authMiddleware, tasksController.obtenerTasks);
 
@@ -120,17 +196,15 @@ router.post('/all', authMiddleware, tasksController.obtenerTasks);
  * @swagger
  * /tasks/{id}:
  *   put:
- *     summary: Actualizar una tarea existente
+ *     summary: Actualizar un proyecto existente
  *     tags: [Tareas]
- *     security:
- *       - ApiKeyAuth: []
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
+ *         description: ID del proyecto a actualizar
  *         schema:
  *           type: string
- *         required: true
- *         description: ID de la tarea a actualizar
  *     requestBody:
  *       required: true
  *       content:
@@ -140,42 +214,40 @@ router.post('/all', authMiddleware, tasksController.obtenerTasks);
  *             properties:
  *               title:
  *                 type: string
- *                 description: Título actualizado de la tarea
+ *                 description: El nuevo título del proyecto
  *               description:
  *                 type: string
- *                 description: Descripción detallada de la tarea
+ *                 description: Una nueva descripción detallada del proyecto
  *               startDate:
  *                 type: string
  *                 format: date
- *                 description: Fecha de inicio en formato ISO
+ *                 description: Nueva fecha de inicio del proyecto en formato ISO
  *               endDate:
  *                 type: string
  *                 format: date
- *                 description: Fecha de fin en formato ISO
+ *                 description: Nueva fecha de fin del proyecto en formato ISO
  *               estatus:
  *                 type: string
- *                 description: Estado actualizado de la tarea (por ejemplo, "Terminada")
+ *                 description: Nuevo estado del proyecto (por ejemplo, "Terminada" o "No terminada")
  *               apikey:
  *                 type: string
  *                 description: La API key del usuario para autorización
  *             example:
  *               title: "Proyecto Actualizado"
  *               description: "Descripción detallada del nuevo proyecto."
- *               startDate: "2024-10-22"
- *               endDate: "2024-12-31"
- *               estatus: "Terminada"
+ *               startDate: "2024-10-22" 
+ *               endDate: "2024-12-31" 
+ *               estatus: "Terminada" 
  *               apikey: "WW9zZWZoOllvc2VmaA=="
  *     responses:
  *       200:
- *         description: Tarea actualizada exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/TaskResponse'
- *       404:
- *         description: Tarea no encontrada
+ *         description: Proyecto actualizado exitosamente
+ *       400:
+ *         description: Error en la solicitud, datos inválidos
  *       401:
- *         description: No autorizado
+ *         description: No autorizado, API key inválida
+ *       404:
+ *         description: Proyecto no encontrado
  */
 router.put('/:id', authMiddleware, tasksController.actualizarTask);
 
